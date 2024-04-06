@@ -5,16 +5,16 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Cendbad MGMT">
-    <meta name="author" content="Cendbad MGMT">
-    <meta name="keywords" content="Cendbad MGMT">
+    <meta name="description" content="LMS">
+    <meta name="author" content="LMS">
+    <meta name="keywords" content="LMS">
 
-    <link rel="preconnect" href="https://cendbad.com">
+    <link rel="preconnect" href="#">
     <link rel="shortcut icon" href="{{asset('public/img/icons/icon-48x48.png')}}" />
 
-    <link rel="canonical" href="https://cendbad.com" />
+    <link rel="canonical" href="#" />
 
-    <title>Cendbad MGMT</title>
+    <title>LMS</title>
 
     <link href="{{asset('public/css/app.css')}}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}">
-                    {{ config('app.name', 'cendbad') }}
+                    {{ config('app.name', 'lms') }}
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>

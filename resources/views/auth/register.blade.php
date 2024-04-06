@@ -23,7 +23,7 @@
             <div class="col-sm-10 col-md-8 col-lg-6 col-xl-5 mx-auto d-table h-100">
                 <div class="mt-5">
                     <div class="text-center">
-                        <h1 class="h2"><strong>Cendbad MGMT</strong></h1>
+                        <h1 class="h2"><strong>LMS</strong></h1>
                     </div>
                     <hr>
                     <div class="card">
@@ -34,7 +34,7 @@
                         </div>
                         <div class="card-body">
                             <div class="m-sm-3">
-                                <form method="POST" action="{{ route('users.register') }}">
+                                <form method="POST" action="{{ route('users.register', ['signup']) }}">
                                     @csrf
                                     <div class="mb-3">
                                         <label class="form-label">Full name</label>

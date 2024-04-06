@@ -1,7 +1,7 @@
 <nav id="sidebar" class="sidebar js-sidebar">
     <div class="sidebar-content js-simplebar">
         <a class="sidebar-brand text-center" href="#">
-            <span class="align-middle">Cendbad MGMT</span>
+            <span class="align-middle">LMS</span>
         </a>
 
         <ul class="sidebar-nav">
@@ -179,7 +179,7 @@
         <div class="sidebar-cta">
             <div class="sidebar-cta-content text-center">
                 <div class="d-grid">
-                    <a href="https://cendbad.com" class="btn btn-primary" target="_blank">cendbad.com</a>
+                    <a href="#" class="btn btn-primary" target="_blank">LMS</a>
                 </div>
             </div>
         </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OtpEmail;
 use App\Models\User;
 use App\Models\UserDetail;
 use Carbon\Carbon;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -26,12 +28,12 @@ class UserController extends Controller
             $searchValue = $request->search['value'];
             $users = $users->where(function ($query) use ($searchValue) {
                 $query->where('name', 'LIKE', "%$searchValue%")
-                      ->orWhere('email', 'LIKE', "%$searchValue%")
-                      ->orWhereHas('user_details', function ($query) use ($searchValue) {
+                    ->orWhere('email', 'LIKE', "%$searchValue%")
+                    ->orWhereHas('user_details', function ($query) use ($searchValue) {
                         $query->where('street', 'LIKE', "%$searchValue%")
-                        ->orWhere('state_city', 'LIKE', "%$searchValue%")
-                        ->orWhere('country', 'LIKE', "%$searchValue%");
-                      });
+                            ->orWhere('state_city', 'LIKE', "%$searchValue%")
+                            ->orWhere('country', 'LIKE', "%$searchValue%");
+                    });
                 // Add more columns for search as needed
             });
         }
@@ -54,27 +56,27 @@ class UserController extends Controller
                 return $row->email;
             })
             ->addColumn('phone_number', function ($row) {
-                return (isset($row->user_details)) ? $row->user_details->country_code.$row->user_details->phone_number : '';
+                return (isset($row->user_details)) ? $row->user_details->country_code . $row->user_details->phone_number : '';
             })
             ->addColumn('address', function ($row) {
-                return (isset($row->user_details)) ? strtoupper($row->user_details->street.', '.$row->user_details->state_city.', '.$row->user_details->country) : '';
+                return (isset($row->user_details)) ? strtoupper($row->user_details->street . ', ' . $row->user_details->state_city . ', ' . $row->user_details->country) : '';
             })
             ->addColumn('role', function ($row) {
                 $html = '';
                 if ($row->user_type == 'admin') {
-                    $html .= '<span class="badge bg-white text-success px-2">'.ucfirst($row->user_type).'</span>';
+                    $html .= '<span class="badge bg-white text-success px-2">' . ucfirst($row->user_type) . '</span>';
                 }
                 if ($row->user_type == 'manager') {
-                    $html .= '<span class="badge bg-white text-primary px-2">'.ucfirst($row->user_type).'</span>';
+                    $html .= '<span class="badge bg-white text-primary px-2">' . ucfirst($row->user_type) . '</span>';
                 }
                 if ($row->user_type == 'seller') {
-                    $html .= '<span class="badge bg-white text-danger px-2">'.ucfirst($row->user_type).'</span>';
+                    $html .= '<span class="badge bg-white text-danger px-2">' . ucfirst($row->user_type) . '</span>';
                 }
                 if ($row->user_type == 'supplier') {
-                    $html .= '<span class="badge bg-white text-info px-2">'.ucfirst($row->user_type).'</span>';
+                    $html .= '<span class="badge bg-white text-info px-2">' . ucfirst($row->user_type) . '</span>';
                 }
                 if ($row->user_type == 'customer') {
-                    $html .= '<span class="badge bg-white text-secondary px-2">'.ucfirst($row->user_type).'</span>';
+                    $html .= '<span class="badge bg-white text-secondary px-2">' . ucfirst($row->user_type) . '</span>';
                 }
                 return $html;
             })
@@ -144,19 +146,22 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, $signUp = null)
     {
         //
         try {
-            $this->validateUser($request);
+            $this->validateUser($request, $signUp);
             $user = new User();
-            $this->saveUser($request, $user);
+            $user = $this->saveUser($request, $user);
+            if ($signUp == null) {
+                $this->saveUserDetail($request, $user);
+            }
             return response()->json([
                 'status' => true,
                 'message' => 'User saved successfully'
             ]);
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            // dd($e->getMessage());
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong',
@@ -229,18 +234,20 @@ class UserController extends Controller
     }
 
     // validate user
-    public function validateUser($request)
+    public function validateUser($request, $signUp)
     {
-        $this->validate($request, [
-            'name' => 'required',
-            'email' => 'required',
-            'country_code' => 'required',
-            'phone_number' => 'required',
-            'street' => 'required',
-            'state_city' => 'required',
-            'country' => 'required',
-            // 'image' => 'required',
-        ]);
+        if ($signUp == null) {
+            $this->validate($request, [
+                'name' => 'required',
+                'email' => 'required',
+                'country_code' => 'required',
+                'phone_number' => 'required',
+                'street' => 'required',
+                'state_city' => 'required',
+                'country' => 'required',
+                // 'image' => 'required',
+            ]);
+        }
     }
 
     // Save user record
@@ -248,19 +255,21 @@ class UserController extends Controller
     {
         $user->name = $request->name;
         $user->email = $request->email;
-        if (Auth::user()->hasRole('admin')) {
+        if (Auth::user() && Auth::user()->hasRole('admin')) {
             if (!empty($request->password)) {
                 $user->password = Hash::make($request->password);
             }
         }
-        $user->user_type = !empty($request->user_type) ? $request->user_type : (!empty($user->user_type) ? $user->user_type : 'customer');
-        $user->active_status = !is_null($request->active_status) ? 'active' : 'in_active';
+        $user->password = Hash::make($request->password);
+        $user->user_type = !empty($request->user_type) ? $request->user_type : 'guest';
+        $user->active_status = 'in_active';
+        $otp = $this->sendOtp($request);
+        $user->otp = $otp;
         $user->save();
-        $role = Role::where('name', $request->user_type)->first();
+        $role = Role::where('name', (!empty($request->user_type) ? $request->user_type : 'guest'))->first();
         if ($user && $role) {
             $user->assignRole($role);
         }
-        $this->saveUserDetail($request, $user);
     }
 
     // Save user details
@@ -283,6 +292,17 @@ class UserController extends Controller
             $userDetails->image = $imageName;
         }
         $userDetails->save();
-        
+    }
+    // Send OTP notification
+    public function sendOtp($request)
+    {
+        // Generate a random 4-digit OTP
+        $otp = mt_rand(1000, 9999);
+        // Send OTP via email
+        Mail::raw('Your OTP for registration is: ' . $otp, function ($message) use ($request) {
+            $message->to($request->email)
+                ->subject('Your OTP for registration');
+        });
+        return $otp;
     }
 }

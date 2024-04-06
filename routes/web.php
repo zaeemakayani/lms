@@ -134,4 +134,4 @@ Route::group(['middleware' => 'auth', 'prefix' => '/'], function () {
 });
 
 // Users routes
-Route::post('/users/register', [UserController::class, 'store'])->name('users.register');
+Route::post('/users/register/{signup?}', [UserController::class, 'store'])->name('users.register');
